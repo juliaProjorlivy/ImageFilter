@@ -31,3 +31,4 @@
 *.out
 *.app
 *.clangd
+old_main.cc
