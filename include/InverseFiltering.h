@@ -17,8 +17,8 @@ public:
     InverseFiltering(int width, int height, double Lambda) : width_(width), height_(height), Lambda_(Lambda), fourie_(width, height) {}
     ~InverseFiltering() = default;
 
-    FourieTransform &&filter(const fftw_complex *distorted_image, const OpticalSystemBase &optical_system, const LightSource &source) {
-
+    void getB(const fftw_complex *distorted_image)
+    {
         // 1. Получение ~B * ~h
         for (int i = 0; i < width_ * height_; ++i)
         {
@@ -27,7 +27,10 @@ public:
         }
 
         fourie_.transform(FFTW_FORWARD);
+    }
 
+    void getPSF(const LightSource &source)
+    {
         // 2. Получение функции рассеяния точки
         for (int i = 0; i < width_ * height_; ++i)
         {
@@ -40,7 +43,10 @@ public:
         }
 
         fourie_.transform(FFTW_BACKWARD);
+    }
 
+    void getPuP()
+    {
         // 3. Получение зрачковой функции (теперь ее нужно отфильтровать от поверхности g(x,y) = sign(x)*|x|^2.5 + sign(y)*|y|^2.5)
         for (int i = 0; i < width_ * height_; ++i)
         {
@@ -53,6 +59,15 @@ public:
         }
 
         fourie_.transform(FFTW_FORWARD);
+    }
+
+    FourieTransform &&filter(const fftw_complex *distorted_image, const OpticalSystemBase &optical_system, const LightSource &source)
+    {
+        getB(distorted_image);
+
+        getPSF(source);
+
+        getPuP();
 
         double k = 2 * M_PI / Lambda_;
         
